@@ -1,0 +1,26 @@
+name: GitHub Release
+
+concurrency: deployment
+
+on:
+  push:
+    branches:
+      - main
+      - release/*
+
+permissions:
+  contents: write
+
+jobs:
+  release-me:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ReleaseMe
+        id: release
+        uses: dev-build-deploy/release-me@v0
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+          
+      - if: ${{ steps.release.outputs.created }}
+        run: echo ${{ fromJSON(steps.release.outputs.release).tag_name }}
