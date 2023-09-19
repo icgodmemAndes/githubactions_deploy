@@ -1,7 +1,5 @@
 name: GitHub Release
-
 concurrency: deployment
-
 on:
   push:
     branches:
@@ -21,6 +19,3 @@ jobs:
         uses: dev-build-deploy/release-me@v0
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
-          
-      - if: ${{ steps.release.outputs.created }}
-        run: echo ${{ fromJSON(steps.release.outputs.release).tag_name }}
