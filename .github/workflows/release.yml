@@ -1,21 +1,50 @@
-name: GitHub Release
-concurrency: deployment
+name: Auto Release
 on:
   push:
     branches:
-      - main
-      - release/*
-
+      - develop
 permissions:
   contents: write
-
+  pull-requests: write
 jobs:
   release-me:
-    name: Create GitHub Release
+    name: Create  Release Branch
     runs-on: ubuntu-latest
     steps:
-      - name: Run ReleaseMe
-        id: release
-        uses: dev-build-deploy/release-me@v0
+      - name: Checkout de repositorio
+        uses: actions/checkout@v2
+      - name: Revisar palabra clave y crear rama
+        id: crear-rama
+        if: ${{ contains(github.event.head_commit.message, 'RELEASE') }}
+        run: |
+          git checkout -b release
+          git push -f -u origin release
+      - name: Mezcla develop -> release
+        uses: tukasz/direct-merge-action@master
         with:
-          token: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          source-branch: develop
+          target-branch: release
+      - name: Configuración de entorno de python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - name: Instalación de librerías y dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Correr pruebas
+        id: correr-pruebas
+        run: python -m unittest discover -s tests -v
+      - name: Cálculo de cubrimiento
+        id: cubrimiento
+        run: |
+          coverage run -m unittest discover -s tests -v
+          coverage report -m
+      - name: Mezcla release -> main
+        if: success()
+        uses: tukasz/direct-merge-action@master
+        with:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          source-branch: release
+          target-branch: main
