@@ -13,18 +13,24 @@ jobs:
     steps:
       - name: Checkout de repositorio
         uses: actions/checkout@v2
+      - name: Genera nombre de rama Release
+        id: generate-branch-name
+        run: echo "release-branch-$(date +'%Y%m%d%H%M%S')" >> branch_name.txt
+      - name: Lee Nombre de Rama desde archivo
+        id: read-branch-name
+        run: echo "::set-output name=branch_name::$(cat branch_name.txt)"
       - name: Revisar palabra clave y crear rama
         id: crear-rama
         if: ${{ contains(github.event.head_commit.message, 'RELEASE') }}
         run: |
-          git checkout -b release
-          git push -f -u origin release
+          git checkout -b ${{ steps.read-branch-name.outputs.branch_name }}
+          git push -f -u origin ${{ steps.read-branch-name.outputs.branch_name }}
       - name: Mezcla develop -> release
         uses: tukasz/direct-merge-action@master
         with:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           source-branch: develop
-          target-branch: release
+          target-branch: ${{ steps.read-branch-name.outputs.branch_name }}
       - name: Configuración de entorno de python
         uses: actions/setup-python@v2
         with:
@@ -46,5 +52,5 @@ jobs:
         uses: tukasz/direct-merge-action@master
         with:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          source-branch: release
+          source-branch: ${{ steps.read-branch-name.outputs.branch_name }}
           target-branch: main
