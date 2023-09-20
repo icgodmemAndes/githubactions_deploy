@@ -2,7 +2,7 @@ name: AutoMerge-Push
 on:
   push:
     branches:
-      - feature/*
+      - feature*
 permissions:
   contents: write
   pull-requests: write
