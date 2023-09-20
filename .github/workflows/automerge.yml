@@ -2,7 +2,7 @@ name: AutoMerge-Push
 on:
   push:
     branches:
-      - feature/**
+      - feature*
 permissions:
   contents: write
   pull-requests: write
@@ -17,8 +17,7 @@ jobs:
         id: crear-rama
         if: ${{ contains(github.event.head_commit.message, 'FEATURE') }}
         run: |
-          git checkout -b ${{ steps.read-branch-name.outputs.branch_name }}
-          git push -f -u origin ${{ steps.read-branch-name.outputs.branch_name }}
+          git checkout ${{ steps.read-branch-name.outputs.branch_name }}
       - name: Mezcla develop -> feature
         uses: tukasz/direct-merge-action@master
         with:
